@@ -1,22 +1,22 @@
 *** %LET NEWMONTHFILE = NOVEMBERAPPS                               ***;
-*** %LET APPIMPORTFILE = APPIMPORTFILE2                            ***;
-*** %LET RECENTMONTHNO = 11                                        ***;
-*** %LET ONEMOAGO = 10                                             ***;
-*** %LET TWOMOAGO = 9                                              ***;
-*** %LET TWOMOBOOKED= SEPTEMBERAPPSB                               ***;
-*** %LET TWOMOUNBOOKED = SEPTEMBERAPPSUNB                          ***;
-*** %LET APPSMINUES2MOAGO = APPSEXCEPTSEPTEMBER                    ***;
-*** %LET ALLAPPSFILE = ALLAPPS_OCTOBERFINAL                        ***;
-*** %LET ONEMOBOOKED = OCTOBERAPPSB                                ***;
-*** %LET ONEMOUNBOOKED = OCTOBERAPPSUNB                            ***;
-*** %LET APPSMINUES1MOAGO = APPSEXCEPTOCTOBER                      ***;
-*** %LET ALLAPPSFILE2 = ALLAPPS_OCTOBERFINAL                       ***;
+*** %LET APP_IMPORT_FILE = APP_IMPORT_FILE_2                            ***;
+*** %LET RECENT_MONTH_NO = 11                                        ***;
+*** %LET ONE_MO_AGO = 10                                             ***;
+*** %LET TWO_MO_AGO = 9                                              ***;
+*** %LET TWO_MO_BOOKED= SEPTEMBERAPPSB                               ***;
+*** %LET TWO_MO_UNBOOKED = SEPTEMBERAPPSUNB                          ***;
+*** %LET APPS_MINUS_2_MO_AGO = APPSEXCEPTSEPTEMBER                    ***;
+*** %LET ALL_APPS_FILE = ALLAPPS_OCTOBERFINAL                        ***;
+*** %LET ONE_MO_BOOKED = OCTOBERAPPSB                                ***;
+*** %LET ONE_MO_UNBOOKED = OCTOBERAPPSUNB                            ***;
+*** %LET APPS_MINUS_1_MO_AGO = APPSEXCEPTOCTOBER                      ***;
+*** %LET ALL_APPS_FILE2 = ALLAPPS_OCTOBERFINAL                       ***;
 ***                                                                ***;
 *** %LET ALLAPPS_HIST_LOC =                                        ***;
 *** "\\mktg-app01\E\Vishwa\webreport\Production\Web\AllApps_History_2.xlsx"***;
 
 PROC IMPORT 
-	DATAFILE = &AllApps_Hist_loc. DBMS = EXCEL OUT = APPIMPORTFILE 
+	DATAFILE = &All_Apps_Hist_loc. DBMS = EXCEL OUT = APP_IMPORT_FILE 
 		REPLACE;
 RUN;
 
@@ -30,15 +30,15 @@ PROC SQL;
 		   MAX(NETLOANAMOUNT) AS MAX_NETLOANAMOUNT,
 		   MIN(NETLOANAMT_201802) AS MIN_NETLOANAMOUNT_201802,
 		   MAX(NETLOANAMT_201802) AS MAX_NETLOANAMOUNT_201802
-	FROM APPIMPORTFILE 
+	FROM APP_IMPORT_FILE 
  /* WHERE NETLOANAMOUNT > 0 */;
 QUIT;
 
-*** DATA APPIMPORTFILE(DROP = APPDATE_SAS AMTREQUESTED DWOWNBR     ***;
+*** DATA APP_IMPORT_FILE(DROP = APPDATE_SAS AMTREQUESTED DWOWNBR     ***;
 ***				       RENAME =(APPDATE_SAS1 = APPDATE_SAS         ***;
 ***							    AMTREQUESTED_NUM = AMTREQUESTED    ***;
 ***							    DWOWNBR_NUM = DWOWNBR));           ***;
-*** 	SET APPIMPORTFILE;                                         ***;
+*** 	SET APP_IMPORT_FILE;                                         ***;
 *** 	APPDATE_SAS1 = APPDATE * 1;                                ***;
 *** 	FORMAT APPDATE_SAS1 date9.;                                ***;
 *** 	AMTREQUESTED_NUM = INPUT(AMTREQUESTED, 10.);               ***;
@@ -47,8 +47,8 @@ QUIT;
 *** RUN;                                                           ***;
 *** -------------------------------------------------------------- ***;
 
-DATA APPIMPORTFILE2;
-	SET APPIMPORTFILE;
+DATA APP_IMPORT_FILE_2;
+	SET APP_IMPORT_FILE;
 	LENGTH APPNUMBER $10 PORTALAPPID $10 LTFILTER_ROUTINGID $10
 		   WORKPHONE $12 CELLPHONE $12 FIRSTNAME $50 MIDDLENAME $50
 		   LASTNAME $50 EMAIL $100 FULLADDRESS $120 ADR1 $80 ADR2 $25
@@ -86,35 +86,35 @@ DATA APPIMPORTFILE2;
 		   ENTYRMONTH2 = ENTYRMONTH;
 RUN;
 
-DATA APPIMPORTFILE2;
+DATA APP_IMPORT_FILE_2;
 	LENGTH APPNUMBER $10 PORTALAPPID $10 LTFILTER_ROUTINGID $10
 		   WORKPHONE $12 CELLPHONE $12 FIRSTNAME $50 MIDDLENAME $50
 		   LASTNAME $50 EMAIL $100 FULLADDRESS $120 ADR1 $80 ADR2 $25
 		   CITY $50 LOANTYPE $25;
-	SET APPIMPORTFILE2 &newmonthfile;
+	SET APP_IMPORT_FILE_2 &newmonthfile;
 RUN;
 
 ***CHECKS -------------------------------------------------------- ***;
 PROC SQL;
-	SELECT ENTYRMONTH, SUM(BOOKED) FROM APPIMPORTFILE2 GROUP BY 1;
-	SELECT APPYRMONTH, COUNT(APPNUMBER) FROM APPIMPORTFILE2 GROUP BY 1;
+	SELECT ENTYRMONTH, SUM(BOOKED) FROM APP_IMPORT_FILE_2 GROUP BY 1;
+	SELECT APPYRMONTH, COUNT(APPNUMBER) FROM APP_IMPORT_FILE_2 GROUP BY 1;
 QUIT;
 
-DATA APPIMPORTFILE2;
-	SET APPIMPORTFILE2;
+DATA APP_IMPORT_FILE_2;
+	SET APP_IMPORT_FILE_2;
 	FORMAT ENTDATE_SAS date9.;
 RUN;
 
-DATA MERGEDXX;
-	SET &appimportfile;
-	IF APPYRMONTH NE &recentmonthNO;
+DATA MERGED_XX;
+	SET &APP_IMPORT_FILE;
+	IF APPYRMONTH NE &RECENT_MONTH_NO;
 RUN;
 
-DATA &twomobooked &twomoUNbooked;
-	SET MERGEDXX; /* LAST ITERATION OF FINAL FILE */
-	IF APPYRMONTH = &twomoago;
-	IF BOOKED = 1 THEN OUTPUT &twomobooked;
-	ELSE OUTPUT &twomoUNbooked;
+DATA &TWO_MO_BOOKED &TWO_MO_UNBOOKED;
+	SET MERGED_XX; /* LAST ITERATION OF FINAL FILE */
+	IF APPYRMONTH = &TWO_MO_AGO;
+	IF BOOKED = 1 THEN OUTPUT &TWO_MO_BOOKED;
+	ELSE OUTPUT &TWO_MO_UNBOOKED;
 RUN;
 
 PROC SORT 
@@ -123,12 +123,12 @@ PROC SORT
 RUN;
 
 PROC SORT 
-	DATA = &twomoUNbooked; 
+	DATA = &TWO_MO_UNBOOKED; 
 	BY SSNO1; 
 RUN;
 
 DATA MADES_A;
-	MERGE &twomoUNbooked(IN = x) VW_L(IN = y);
+	MERGE &TWO_MO_UNBOOKED(IN = x) VW_L(IN = y);
 	BY SSNO1;
 	IF x = 1;
 RUN;
@@ -144,7 +144,7 @@ DATA MADES_A;
 RUN;
 
 DATA MADES_A;
-	SET MADES_A &twomobooked;
+	SET MADES_A &TWO_MO_BOOKED;
 RUN;
 
 PROC SORT 
@@ -205,22 +205,22 @@ PROC SQL;
 	GROUP BY 1;
 QUIT;
 
-DATA &appsminues2moago;
-	SET MERGEDXX;
-	IF APPYRMONTH NE &twomoago;
+DATA &APPS_MINUS_2_MO_AGO;
+	SET MERGED_XX;
+	IF APPYRMONTH NE &TWO_MO_AGO;
 RUN;
 
-DATA &allappsfile;
-	SET &appsminues2moago FINAL;
+DATA &ALL_APPS_FILE;
+	SET &APPS_MINUS_2_MO_AGO FINAL;
 RUN;
 
 *** HERE WE ARE IDENTIFYING LOANS BOOKED THIS MONTH FROM LAST      ***;
 *** MONTH'S APPLICATIONS ----------------------------------------- ***;
-DATA &onemobooked &onemoUNbooked;
-	SET &allappsfile;
-	IF APPYRMONTH = &onemoago;
-	IF BOOKED = 1 THEN OUTPUT &onemobooked;
-	ELSE OUTPUT &onemoUNbooked;
+DATA &ONE_MO_BOOKED &ONE_MO_UNBOOKED;
+	SET &ALL_APPS_FILE;
+	IF APPYRMONTH = &ONE_MO_AGO;
+	IF BOOKED = 1 THEN OUTPUT &ONE_MO_BOOKED;
+	ELSE OUTPUT &ONE_MO_UNBOOKED;
 RUN;
 
 PROC SORT 
@@ -229,12 +229,12 @@ PROC SORT
 RUN;
 
 PROC SORT 
-	DATA = &onemoUNbooked; 
+	DATA = &ONE_MO_UNBOOKED; 
 	BY SSNO1;
 RUN;
 
 DATA MADES_A;
-	MERGE &onemoUNbooked(IN = x) VW_L(IN = y);
+	MERGE &ONE_MO_UNBOOKED(IN = x) VW_L(IN = y);
 	BY SSNO1;
 	IF x = 1;
 RUN;
@@ -250,7 +250,7 @@ RUN;
 
 
 DATA MADES_A;
-	SET MADES_A &onemobooked;
+	SET MADES_A &ONE_MO_BOOKED;
 RUN;
 
 PROC SORT
@@ -303,11 +303,11 @@ DATA FINAL;
 	COSTPERLOAN = 80;
 RUN;
 
-DATA &appsminues1moago;
-	SET &allappsfile;
-	IF APPYRMONTH NE &onemoago;
+DATA &APPS_MINUS_1_MO_AGO;
+	SET &ALL_APPS_FILE;
+	IF APPYRMONTH NE &ONE_MO_AGO;
 RUN;
 
-DATA &allappsfile2;
-	SET &appsminues1moago FINAL;
+DATA &ALL_APPS_FILE_2;
+	SET &APPS_MINUS_1_MO_AGO FINAL;
 RUN;
