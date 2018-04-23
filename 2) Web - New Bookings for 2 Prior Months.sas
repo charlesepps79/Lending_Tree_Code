@@ -1,22 +1,22 @@
-*** %LET NEWMONTHFILE = NOVEMBERAPPS                               ***;
-*** %LET APP_IMPORT_FILE = APP_IMPORT_FILE_2                            ***;
-*** %LET RECENT_MONTH_NO = 11                                        ***;
-*** %LET ONE_MO_AGO = 10                                             ***;
-*** %LET TWO_MO_AGO = 9                                              ***;
-*** %LET TWO_MO_BOOKED= SEPTEMBERAPPSB                               ***;
-*** %LET TWO_MO_UNBOOKED = SEPTEMBERAPPSUNB                          ***;
-*** %LET APPS_MINUS_2_MO_AGO = APPSEXCEPTSEPTEMBER                    ***;
-*** %LET ALL_APPS_FILE = ALLAPPS_OCTOBERFINAL                        ***;
-*** %LET ONE_MO_BOOKED = OCTOBERAPPSB                                ***;
-*** %LET ONE_MO_UNBOOKED = OCTOBERAPPSUNB                            ***;
-*** %LET APPS_MINUS_1_MO_AGO = APPSEXCEPTOCTOBER                      ***;
-*** %LET ALL_APPS_FILE2 = ALLAPPS_OCTOBERFINAL                       ***;
+*** %LET NEW_MONTH_FILE = NOVEMBER_APPS                            ***;
+*** %LET APP_IMPORT_FILE = APP_IMPORT_FILE_2                       ***;
+*** %LET RECENT_MONTH_NO = 11                                      ***;
+*** %LET ONE_MO_AGO = 10                                           ***;
+*** %LET TWO_MO_AGO = 9                                            ***;
+*** %LET TWO_MO_BOOKED= SEPTEMBER_APPS_B                           ***;
+*** %LET TWO_MO_UNBOOKED = SEPTEMBER_APPS_UNB                      ***;
+*** %LET APPS_MINUS_2_MO_AGO = APPS_EXCEPT_SEPTEMBER               ***;
+*** %LET ALL_APPS_FILE = ALL_APPS_OCTOBER_FINAL                    ***;
+*** %LET ONE_MO_BOOKED = OCTOBER_APPS_B                            ***;
+*** %LET ONE_MO_UNBOOKED = OCTOBER_APPS_UNB                        ***;
+*** %LET APPS_MINUS_1_MO_AGO = APPS_EXCEPT_OCTOBER                 ***;
+*** %LET ALL_APPS_FILE_2 = ALL_APPS_OCTOBER_FINAL                  ***;
 ***                                                                ***;
-*** %LET ALLAPPS_HIST_LOC =                                        ***;
+*** %LET ALL_APPS_HIST_LOC =                                       ***;
 *** "\\mktg-app01\E\Vishwa\webreport\Production\Web\AllApps_History_2.xlsx"***;
 
 PROC IMPORT 
-	DATAFILE = &All_Apps_Hist_loc. DBMS = EXCEL OUT = APP_IMPORT_FILE 
+	DATAFILE = &ALL_APPS_HIST_LOC. DBMS = EXCEL OUT = APP_IMPORT_FILE 
 		REPLACE;
 RUN;
 
@@ -34,11 +34,11 @@ PROC SQL;
  /* WHERE NETLOANAMOUNT > 0 */;
 QUIT;
 
-*** DATA APP_IMPORT_FILE(DROP = APPDATE_SAS AMTREQUESTED DWOWNBR     ***;
-***				       RENAME =(APPDATE_SAS1 = APPDATE_SAS         ***;
-***							    AMTREQUESTED_NUM = AMTREQUESTED    ***;
-***							    DWOWNBR_NUM = DWOWNBR));           ***;
-*** 	SET APP_IMPORT_FILE;                                         ***;
+*** DATA APP_IMPORT_FILE(DROP = APPDATE_SAS AMTREQUESTED DWOWNBR   ***;
+***				         RENAME =(APPDATE_SAS1 = APPDATE_SAS       ***;
+***							      AMTREQUESTED_NUM = AMTREQUESTED  ***;
+***							      DWOWNBR_NUM = DWOWNBR));         ***;
+*** 	SET APP_IMPORT_FILE;                                       ***;
 *** 	APPDATE_SAS1 = APPDATE * 1;                                ***;
 *** 	FORMAT APPDATE_SAS1 date9.;                                ***;
 *** 	AMTREQUESTED_NUM = INPUT(AMTREQUESTED, 10.);               ***;
@@ -91,13 +91,18 @@ DATA APP_IMPORT_FILE_2;
 		   WORKPHONE $12 CELLPHONE $12 FIRSTNAME $50 MIDDLENAME $50
 		   LASTNAME $50 EMAIL $100 FULLADDRESS $120 ADR1 $80 ADR2 $25
 		   CITY $50 LOANTYPE $25;
-	SET APP_IMPORT_FILE_2 &newmonthfile;
+	SET APP_IMPORT_FILE_2 &NEW_MONTH_FILE;
 RUN;
 
 ***CHECKS -------------------------------------------------------- ***;
 PROC SQL;
-	SELECT ENTYRMONTH, SUM(BOOKED) FROM APP_IMPORT_FILE_2 GROUP BY 1;
-	SELECT APPYRMONTH, COUNT(APPNUMBER) FROM APP_IMPORT_FILE_2 GROUP BY 1;
+	SELECT ENTYRMONTH, SUM(BOOKED) 
+	FROM APP_IMPORT_FILE_2 
+	GROUP BY 1;
+
+	SELECT APPYRMONTH, COUNT(APPNUMBER) 
+	FROM APP_IMPORT_FILE_2 
+	GROUP BY 1;
 QUIT;
 
 DATA APP_IMPORT_FILE_2;
@@ -247,7 +252,6 @@ DATA MADES_A;
 	IF BOOKED = 0 THEN BRACCTNO = "";
 	IF OWNBR = "" THEN OWNBR = DWOWNBR;
 RUN;
-
 
 DATA MADES_A;
 	SET MADES_A &ONE_MO_BOOKED;
