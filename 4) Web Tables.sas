@@ -1,5 +1,5 @@
-%LET APPMONTH = 3;
-%LET BOOK_MONTH = 3;
+%LET APPMONTH = 4;
+%LET BOOK_MONTH = 4;
 
 TITLE;
 
@@ -76,7 +76,7 @@ PROC TABULATE
 		   TOTALAPPS * F = comma18.0 
 		   PREAPPROVED_FLAG = "# Auto Apprv" * F = comma18.0 
 		   PREAPPROVED_FLAG = "% approve" * ROWPCTSUM < TOTALAPPS > * F
-			= PCTPIC . / NOCELLMERGE;
+			= PCTPIC. / NOCELLMERGE;
 	BY SOURCE;
 	WHERE SOURCE = 'LendingTree' & APPMONTH = &APPMONTH;
 RUN;
@@ -96,8 +96,8 @@ RUN;
 ODS EXCEL close;
 
 *** BY VP AND SUPERVISOR ----------------------------------------- ***;
-%LET APPMONTH = 3;
-%LET BOOK_MONTH = 3;
+%LET APPMONTH = 4;
+%LET BOOK_MONTH = 4;
 
 PROC SORT 
 	DATA = ALL_APPS_3;
@@ -158,8 +158,8 @@ ODS EXCEL close;
 
 
 *BY amtbucket;
-%LET APPMONTH=3;
-%LET BOOK_MONTH=3;
+%LET APPMONTH=4;
+%LET BOOK_MONTH=4;
 
 ODS EXCEL;
 TITLE "Lending Tree";
