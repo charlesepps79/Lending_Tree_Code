@@ -74,7 +74,7 @@ SELECT *, length(PrLnNo) as prln_length,case when orgst in ('OK','SC') and lengt
            when length(PrLnNo) = 8 then new_ownbr||substr((''||PrLnNo),1,6)
            when length(PrLnNo) = 9 then PrLnNo||'0'
                 when length(PrLnNo) = 10 then PrLnNo 
-           when length(PrLnNo) = 11 then substr((''||PrLnNo),1,10)  
+           when length(PrLnNo) = 11 then PrLnNo  
            when length(PrLnNo) = 12 then PrLnNo 
            when length(PrLnNo) = 22 then substr(PrLnNo,max(1,length(PrLnNo)-10+1),10)
 
