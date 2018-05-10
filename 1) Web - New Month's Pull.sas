@@ -1,8 +1,8 @@
-OPTIONS MPRINT MLOGIC SYMBOLGEN; /* SET DEBUGGING OPTIONS */
+﻿OPTIONS MPRINT MLOGIC SYMBOLGEN; /* SET DEBUGGING OPTIONS */
 
 *** WEB REPORT MAIN DIRECTORY LOCATION --------------------------- ***;
 %LET MAIN_DIR = 
-	\\mktg-app01\E\cepps\Web_Report\Lending_Tree;
+	\\mktg-app01\E\cepps\Web_Report\Lending_Tree\Reports\04_2018_TEST;
 *** CHANGE ONLY WHEN ROSTER FILE CHANGES ------------------------- ***;
 %LET ROSTER_LOC = 
 "\\mktg-app01\E\cepps\Web_Report\BranchRosterFile\Roster 11-14-17.xlsx";
@@ -17,7 +17,7 @@ OPTIONS MPRINT MLOGIC SYMBOLGEN; /* SET DEBUGGING OPTIONS */
 
 *** NO CHANGE - ENSURE CURRENT MONTH APP FILE -------------------- ***;
 %LET AIP_REPORT_LOC = 
-"\\mktg-app01\E\cepps\Web_Report\Lending_Tree\AppIntReport.xlsx";
+"\\mktg-app01\E\cepps\Web_Report\Lending_Tree\Reports\04_2018_TEST\Data\AppIntReport.xlsx";
 %LET TAB_NAME = Application Internet Report;
 
 *** CHANGE TO LAST MONTH ALL APPS FILENAME ----------------------- ***;
