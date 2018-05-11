@@ -15,14 +15,16 @@ if pocd="**" then delete;
 if pocd="BT" then delete;
 run;
 
-proc export data=vw_Loantable outfile="&MAINDIR\vw_Loantable.xlsx" dbms=excel replace;
+/*
+proc export data=vw_Loantable outfile="&MAIN_DIR\vw_Loantable.xlsx" dbms=excel replace;
 run;
+*/
 
 /*Subset for current month bookings*/
 proc sql;
 create table 
 jan_book as
-select * from allapps3 where entyrmonth in (201804) ;quit; /*Change*/
+select * from ALL_APPS_3 where entyrmonth in (201804) ;quit; /*Change*/
 
 /*Subeset for non 'NB' and 'FB' customer type*/
 proc sql;
@@ -116,7 +118,10 @@ set ALL_APP8;
 renew_amt = sum(renew_netlonamount,-old_AmtPaidLast);
 run;
 
-proc export data=ALL_APP9 outfile="&MAINDIR\ALL_APP9_1.xlsx" dbms=excel replace;
+proc export 
+	data=ALL_APP9 
+	outfile="&MAIN_DIR\ALL_APP9_1.xlsx" 
+	dbms=excel replace;
 run;
 
 proc sql;
@@ -131,7 +136,7 @@ proc sql; select sum(renew_amt) from ALL_APP9 ; quit;
 PROC SQL;
 CREATE TABLE ALL_APP10 AS 
 SELECT A.*, B.old_bracctno1, B.renew_bracctno,B.renew_netlonamount,B.old_AmtPaidLast,B.renew_amt
-from allapps3 a left join ALL_APP9 b on a.bracctno = b.renew_bracctno; QUIT;
+from ALL_APPS_3 a left join ALL_APP9 b on a.bracctno = b.renew_bracctno; QUIT;
 
 PROC SQL;
 CREATE TABLE CHK1 AS 
