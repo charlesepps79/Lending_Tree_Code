@@ -1,4 +1,4 @@
-PROC SQL;
+﻿PROC SQL;
    CREATE TABLE WORK.REPORTS_TABLE AS 
    SELECT *
       FROM WORK.ALL_APPS_3 t1;
@@ -94,10 +94,6 @@ PROC SQL;
           /* $ Total Adv */
             (SUM(t1.NETLOANAMT_CURRENT)) 
 				FORMAT=DOLLAR8. AS '$ Total Adv'n, 
-          /* Sum_New_Amt_Current */
-            (SUM(t1.NEW_AMT_CURRENT)) AS Sum_New_Amt_Current, 
-          /* Sum_Renew_Amt_Current */
-            (SUM(t1.RENEW_AMT_CURRENT)) AS Sum_Renew_Amt_Current, 
           /* $ Net Adv */
             ( (SUM(t1.NEW_AMT_CURRENT)) + (SUM(t1.RENEW_AMT_CURRENT)))
 				FORMAT=DOLLAR8. AS '$ Net Adv'n, 
@@ -106,8 +102,6 @@ PROC SQL;
 				(SUM(t1.RENEW_AMT_CURRENT))) / 
 				(SUM(t1.BOOKED_CURRENT))) 
 				FORMAT=DOLLAR8. AS 'avg adv'n,
-          /* Sum_Renewal_Flag */
-            (SUM(t1.RENEW_FLAG_CURRENT)) AS Sum_Renewal_Flag, 
           /* % Renewal */
             ((SUM(t1.RENEW_FLAG_CURRENT)) / (SUM(t1.BOOKED_CURRENT)))
 				FORMAT=PERCENT8.2 AS '% Renewal'n, 
@@ -139,11 +133,6 @@ PROC SQL;
                t1.Supervisor,
                t1.OWNBR;
 QUIT;
-
-DATA LENDING_TREE_BY_BRANCH;
-	SET LENDING_TREE_BY_BRANCH;
-	DROP Sum_New_Amt_Current Sum_Renew_Amt_Current Sum_Renewal_Flag;
-RUN;
 
 PROC SQL;
    CREATE TABLE LT_BY_STATE_R_ID_AMT_BUCKET AS 
@@ -234,10 +223,6 @@ PROC SQL;
           /* $ Total Adv */
             (SUM(t1.NETLOANAMT_CURRENT)) 
 				FORMAT=DOLLAR8. AS '$ Total Adv'n, 
-          /* Sum_New_Amt_Current */
-            (SUM(t1.NEW_AMT_CURRENT)) AS Sum_New_Amt_Current, 
-          /* Sum_Renew_Amt_Current */
-            (SUM(t1.RENEW_AMT_CURRENT)) AS Sum_Renew_Amt_Current, 
           /* $ Net Adv */
             ( (SUM(t1.NEW_AMT_CURRENT)) + (SUM(t1.RENEW_AMT_CURRENT)))
 				FORMAT=DOLLAR8. AS '$ Net Adv'n, 
@@ -246,33 +231,13 @@ PROC SQL;
 				(SUM(t1.RENEW_AMT_CURRENT))) / 
 				(SUM(t1.BOOKED_CURRENT))) 
 				FORMAT=DOLLAR8. AS 'avg adv'n,
-          /* Sum_Renewal_Flag */
-            (SUM(t1.RENEW_FLAG_CURRENT)) AS Sum_Renewal_Flag, 
           /* % Renewal */
             ((SUM(t1.RENEW_FLAG_CURRENT)) / (SUM(t1.BOOKED_CURRENT)))
 				FORMAT=PERCENT8.2 AS '% Renewal'n, 
           /* # Renewal */
             (SUM(t1.RENEW_FLAG_CURRENT)) AS '# Renewal'n, 
           /* $ Renew */
-            (SUM(t1.RENEW_AMT_CURRENT)) FORMAT=DOLLAR8. AS '$ Renew'n, 
-          /* Total App Cost */
-            (SUM(t1.TOTALAPPCOST_CURRENT))
-				FORMAT=DOLLAR8. AS 'Total App Cost'n, 
-          /* Cost Per Loan */
-            (AVG(t1.COSTPERLOAN)) FORMAT=DOLLAR8. AS 'Cost Per Loan'n, 
-          /* Total Loan Cost */
-            (SUM(t1.TOTALLOANCOST_CURRENT)) 
-				FORMAT=DOLLAR8. AS 'Total Loan Cost'n, 
-          /* Total Cost */
-            ((SUM(t1.TOTALLOANCOST_CURRENT)) + 
-				(SUM(t1.TOTALAPPCOST_CURRENT))) 
-				FORMAT=DOLLAR8. AS 'Total Cost'n, 
-          /* CPK */
-            (((SUM(t1.TOTALLOANCOST_CURRENT)) + 
-				(SUM(t1.TOTALAPPCOST_CURRENT))) / 
-				( (SUM(t1.NEW_AMT_CURRENT)) + 
-            	(SUM(t1.RENEW_AMT_CURRENT))) * 1000) 
-				FORMAT=DOLLAR8. AS CPK
+            (SUM(t1.RENEW_AMT_CURRENT)) FORMAT=DOLLAR8. AS '$ Renew'n 
       FROM REPORTS_TABLE t1
       WHERE t1.SOURCE = 'Web Apps'
       GROUP BY t1.VP,
