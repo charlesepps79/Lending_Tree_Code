@@ -1,143 +1,212 @@
+﻿%LET LOAN_ENTDATE_BEGIN1 = "2010-01-01"; /* DO NOT CHANGE */
+%LET LOAN_ENTDATE_END1 = "2018-04-30"; /* CHANGE TO END OF THE MONTH */
 
-%let loan_entdate_begin1 = "2010-01-01"; /*Do not change*/
-%let loan_entdate_end1 = "2018-04-30"; /*Change to end of the month*/   
-
-/*Pull loan table*/
-data vw_Loantable;
-set dw.vw_loan (keep= ssno1_rt7 bracctno id ownbr ssno1 ssno2 lnamt finchg loantype loandate entdate classid 
-classtranslation netloanamount orgst aprate
-srcd pocd poffdate pldate PrLnNo plamt bnkrptdate conprofile1 conprofile2 datepaidlast PLCD orgbr AmtPaidLast 
-OldAcctNo  );
-where &loan_entdate_begin1. <=entdate<= &loan_entdate_end1. ;
-entdate_sas = input(entdate, yymmdd10.);
-format entdate_sas date9.;
-if pocd="**" then delete;
-if pocd="BT" then delete;
-run;
+*** PULL LOAN TABLE ---------------------------------------------- ***;
+DATA VW_LOANTABLE;
+	SET DW.VW_LOAN(
+		KEEP = SSNO1_RT7 BRACCTNO ID OWNBR SSNO1 SSNO2 LNAMT FINCHG
+			   LOANTYPE LOANDATE ENTDATE CLASSID CLASSTRANSLATION
+			   NETLOANAMOUNT ORGST APRATE SRCD POCD POFFDATE PLDATE
+			   PRLNNO PLAMT BNKRPTDATE CONPROFILE1 CONPROFILE2
+			   DATEPAIDLAST PLCD ORGBR AMTPAIDLAST OLDACCTNO);
+	WHERE &LOAN_ENTDATE_BEGIN1. <= ENTDATE <= &LOAN_ENTDATE_END1.;
+	ENTDATE_SAS = INPUT(ENTDATE, yymmdd10.);
+	FORMAT ENTDATE_SAS dAte9.;
+	IF POCD = "**" THEN DELETE;
+	IF POCD = "BT" THEN DELETE;
+RUN;
 
 /*
-proc export data=vw_Loantable outfile="&MAIN_DIR\vw_Loantable.xlsx" dbms=excel replace;
-run;
+PROC EXPORT 
+	DATA = VW_LOANTABLE 
+	OUTFILE = "&MAIN_DIR\VW_LOANTABLE.xlsx" 
+	DBMS = EXCEL REPLACE;
+RUN;
 */
 
-/*Subset for current month bookings*/
-proc sql;
-create table 
-jan_book as
-select * from ALL_APPS_3 where entyrmonth in (201804) ;quit; /*Change*/
-
-/*Subeset for non 'NB' and 'FB' customer type*/
-proc sql;
-create table all_app4 as
-select entyrmonth,bracctno,netloanamount,ClassTranslation as ClassTranslation1 from jan_book 
-where srcd not in ('NB','FB') and entyrmonth in (201804) and booked = 1; 
+*** SUBSET FOR CURRENT MONTH BOOKINGS ---------------------------- ***;
+PROC SQL;
+	CREATE TABLE MONTH_BOOK AS
+	SELECT * FROM ALL_APPS_3 WHERE ENTYRMONTH IN (201804); /* CHANGE */
 QUIT;
 
-/*Checks*/
-proc sql;
-create table abc as 
-select entyrmonth, count(*) from all_app4 group by 1;
-quit;
-
-/*QC*/
+*** SUBSET FOR NON 'NB' AND 'FB' CUSTOMER TYPE ------------------- ***;
 PROC SQL;
-SELECT entyrmonth,sum (booked) from jan_book where appyrmonth in (201804) group by 1; /*Change*/
-quit;
+	CREATE TABLE ALL_APP4 AS
+	SELECT ENTYRMONTH, 
+		   BRACCTNO, 
+		   NETLOANAMOUNT, 
+		   CLASSTRANSLATION AS CLASSTRANSLATION1 
+	FROM MONTH_BOOK 
+	WHERE SRCD NOT IN ('NB', 'FB') AND 
+		  ENTYRMONTH IN (201804) AND 
+		  BOOKED = 1; 
+QUIT;
 
-/*Join with loan table*/
+*** CHECKS ------------------------------------------------------- ***;
 PROC SQL;
-CREATE TABLE ALL_APP5 AS 
-SELECT A.*,b.ssno1,b.netloanamount as netloanamount_b 
-,b.OwnBr,b.ClassID,b.ClassTranslation,b.POCD,b.PLCD,b.PlDate,b.POffDate,b.LnAmt,b.FinChg,b.PrLnNo,b.AmtPaidLast,b.OldAcctNo,
-b.OrgBr,b.LoanType as loantype_pi,b.orgst from all_app4 a 
-left join vw_Loantable b 
-on a.bracctno = b.bracctno;
-quit;
+	CREATE TABLE ABC AS 
+	SELECT ENTYRMONTH, 
+		   COUNT(*) 
+	FROM ALL_APP4 
+	GROUP BY 1;
+QUIT;
 
-/*Finding old bracctno*/
+*** QC ------------------------------------------------------------ ***;
 PROC SQL;
-CREATE TABLE ALL_APP6 AS
-SELECT *,
-case when length(ownbr) = 1 then '000'||ownbr
-           when length(ownbr) = 2 then '00'||ownbr
-           when length(ownbr) = 3 then '0'||ownbr
-           when length(ownbr) = 4 then ownbr
-                when length(ownbr) > 4 then ownbr else ownbr end as new_ownbr from ALL_APP5; quit;
+	SELECT ENTYRMONTH, 
+		   SUM(BOOKED) 
+	FROM MONTH_BOOK 
+	WHERE APPYRMONTH IN (201804) GROUP BY 1; /* CHANGE */
+QUIT;
 
+*** JOIN WITH LOAN TABLE ----------------------------------------- ***;
 PROC SQL;
-CREATE TABLE ALL_APP7 AS
-SELECT *, length(PrLnNo) as prln_length,case when orgst in ('OK','SC') and length(PrLnNo) = 9 then '0'||PrLnNo
-           when length(PrLnNo) = 1 then new_ownbr||substr(('0000000'||PrLnNo),1,6)
-           when length(PrLnNo) = 2 then new_ownbr||substr(('000000'||PrLnNo),1,6)
-           when length(PrLnNo) = 3 then new_ownbr||substr(('00000'||PrLnNo),1,6)
-           when length(PrLnNo) = 4 then new_ownbr||substr(('0000'||PrLnNo),1,6)
-           when length(PrLnNo) = 5 then new_ownbr||substr(('000'||PrLnNo),1,6)
-           when length(PrLnNo) = 6 then new_ownbr||substr(('00'||PrLnNo),1,6)
-           when length(PrLnNo) = 7 then new_ownbr||substr(('0'||PrLnNo),1,6)
-           when length(PrLnNo) = 8 then new_ownbr||substr((''||PrLnNo),1,6)
-           when length(PrLnNo) = 9 then PrLnNo||'0'
-                when length(PrLnNo) = 10 then PrLnNo 
-           when length(PrLnNo) = 11 then PrLnNo  
-           when length(PrLnNo) = 12 then PrLnNo 
-           when length(PrLnNo) = 22 then substr(PrLnNo,max(1,length(PrLnNo)-10+1),10)
+	CREATE TABLE ALL_APP5 AS 
+	SELECT A.*, 
+		   B.SSNO1,
+		   B.NETLOANAMOUNT AS NETLOANAMOUNT_B, 
+		   B.OWNBR, 
+		   B.CLASSID, 
+		   B.CLASSTRANSLATION, 
+		   B.POCD, 
+		   B.PLCD, 
+		   B.PLDATE, 
+		   B.POFFDATE, 
+		   B.LNAMT, 
+		   B.FINCHG, 
+		   B.PRLNNO, 
+		   B.AMTPAIDLAST, 
+		   B.OLDACCTNO, 
+		   B.ORGBR,
+		   B.LOANTYPE AS LOANTYPE_PI,
+		   B.ORGST 
+	FROM ALL_APP4 A 
+	LEFT JOIN VW_LOANTABLE B ON A.BRACCTNO = B.BRACCTNO;
+QUIT;
 
-           when length(PrLnNo) = 24 then substr(PrLnNo,max(1,length(PrLnNo)-12+1),12)
-           when length(PrLnNo) = 26 then substr(PrLnNo,max(1,length(PrLnNo)-12+1),12)
-           when length(PrLnNo) = 28 then substr(PrLnNo,max(1,length(PrLnNo)-12+1),12)
-           when length(PrLnNo) >= 34 then substr(PrLnNo,max(1,length(PrLnNo)-10+1),10) else PrLnNo end as old_bracctno FROM ALL_APP6;
-           QUIT;
-
-
-
-/*Final Dataset with renewed loans*/ 
-proc sql;
-create table ALL_APP8 as 
-select a.entyrmonth, a.bracctno as renew_bracctno, 
-a.netloanamount_b as renew_netlonamount,
-a.classtranslation,
-a.AmtPaidLast,
-a.orgst,
-a.old_bracctno as old_bracctno1,
-b.bracctno as old_bracctno,
-b.srcd as old_srcd,
-b.ClassID  as old_ClassID,
-b.AmtPaidLast as old_AmtPaidLast
-
-from 
-ALL_APP7 a 
-left join vw_Loantable b
-on a.old_bracctno=b.bracctno; 
-quit;
-
-/*proc print*/
-/*data=ALL_APP9; */
-/*run;*/
-
-data ALL_APP9;
-set ALL_APP8;
-renew_amt = sum(renew_netlonamount,-old_AmtPaidLast);
-run;
-
-proc export 
-	data=ALL_APP9 
-	outfile="&MAIN_DIR\ALL_APP9_1.xlsx" 
-	dbms=excel replace;
-run;
-
-proc sql;
-create table abc as 
-select entyrmonth,count(*), sum(renew_amt) from ALL_APP9 
-where old_bracctno is not null and renew_amt > 0
-group by 1; 
-quit; 
-
-proc sql; select sum(renew_amt) from ALL_APP9 ; quit;
+*** FINDING OLD BRACCTNO ----------------------------------------- ***;
+PROC SQL;
+	CREATE TABLE ALL_APP6 AS
+	SELECT *,
+		   CASE WHEN LENGTH(OWNBR) = 1 THEN '000' || OWNBR
+				WHEN LENGTH(OWNBR) = 2 THEN '00' || OWNBR
+				WHEN LENGTH(OWNBR) = 3 THEN '0' || OWNBR
+				WHEN LENGTH(OWNBR) = 4 THEN OWNBR
+				WHEN LENGTH(OWNBR) > 4 THEN OWNBR 
+					ELSE OWNBR 
+			END AS NEW_OWNBR FROM ALL_APP5; 
+QUIT;
 
 PROC SQL;
-CREATE TABLE ALL_APP10 AS 
-SELECT A.*, B.old_bracctno1, B.renew_bracctno,B.renew_netlonamount,B.old_AmtPaidLast,B.renew_amt
-from ALL_APPS_3 a left join ALL_APP9 b on a.bracctno = b.renew_bracctno; QUIT;
+	CREATE TABLE ALL_APP7 AS
+	SELECT *, 
+		   LENGTH(PRLNNO) AS PRLN_LENGTH,
+		   CASE WHEN ORGST IN ('OK', 'SC') AND 
+					 LENGTH(PRLNNO) = 9 THEN '0' || PRLNNO
+				WHEN LENGTH(PRLNNO) = 1 THEN 
+					NEW_OWNBR || SUBSTR(('0000000' || PRLNNO), 1, 6)
+				WHEN LENGTH(PRLNNO) = 2 THEN 
+					NEW_OWNBR || SUBSTR(('000000' || PRLNNO), 1, 6)
+				WHEN LENGTH(PRLNNO) = 3 THEN 
+					NEW_OWNBR || SUBSTR(('00000' || PRLNNO), 1, 6)
+				WHEN LENGTH(PRLNNO) = 4 THEN 
+					NEW_OWNBR || SUBSTR(('0000' || PRLNNO), 1, 6)
+				WHEN LENGTH(PRLNNO) = 5 THEN 
+					NEW_OWNBR || SUBSTR(('000' || PRLNNO), 1, 6)
+				WHEN LENGTH(PRLNNO) = 6 THEN 
+					NEW_OWNBR || SUBSTR(('00' || PRLNNO), 1, 6)
+				WHEN LENGTH(PRLNNO) = 7 THEN 
+					NEW_OWNBR || SUBSTR(('0' || PRLNNO), 1, 6)
+				WHEN LENGTH(PRLNNO) = 8 THEN 
+					NEW_OWNBR || SUBSTR(('' || PRLNNO), 1, 6)
+				WHEN LENGTH(PRLNNO) = 9 THEN PRLNNO || '0'
+				WHEN LENGTH(PRLNNO) = 10 THEN PRLNNO
+				WHEN LENGTH(PRLNNO) = 11 THEN PRLNNO
+				WHEN LENGTH(PRLNNO) = 12 THEN PRLNNO
+				WHEN LENGTH(PRLNNO) = 22 THEN 
+					SUBSTR(PRLNNO, MAX(1, LENGTH(PRLNNO) - 10 + 1), 10)
+				WHEN LENGTH(PRLNNO) = 24 THEN 
+					SUBSTR(PRLNNO, MAX(1, LENGTH(PRLNNO) - 12 + 1), 12)
+				WHEN LENGTH(PRLNNO) = 26 THEN 
+					SUBSTR(PRLNNO, MAX(1, LENGTH(PRLNNO) - 12 + 1), 12)
+				WHEN LENGTH(PRLNNO) = 28 THEN 
+					SUBSTR(PRLNNO, MAX(1, LENGTH(PRLNNO) - 12 + 1), 12)
+				WHEN LENGTH(PRLNNO) >= 34 THEN 
+					SUBSTR(PRLNNO, MAX(1, LENGTH(PRLNNO) - 10 + 1), 10) 
+				ELSE PRLNNO 
+			END AS OLD_BRACCTNO 
+	FROM ALL_APP6;
+QUIT;
+
+*** FINAL DATASET WITH RENEWED LOANS ----------------------------- ***; 
+PROC SQL;
+	CREATE TABLE ALL_APP8 AS 
+	SELECT A.ENTYRMONTH, 
+		   A.BRACCTNO AS RENEW_BRACCTNO, 
+		   A.NETLOANAMOUNT_B AS RENEW_NETLOANAMOUNT,
+		   A.CLASSTRANSLATION,
+		   A.AMTPAIDLAST,
+		   A.ORGST,
+		   A.OLD_BRACCTNO AS OLD_BRACCTNO1,
+		   B.BRACCTNO AS OLD_BRACCTNO,
+		   B.SRCD AS OLD_SRCD,
+		   B.CLASSID  AS OLD_CLASSID,
+		   B.AMTPAIDLAST AS OLD_AMTPAIDLAST
+	FROM ALL_APP7 A 
+	LEFT JOIN VW_LOANTABLE B ON A.OLD_BRACCTNO = B.BRACCTNO; 
+QUIT;
+
+/*
+PROC PRINT
+	DATA = ALL_APP9; 
+RUN;
+*/
+
+DATA ALL_APP9;
+	SET ALL_APP8;
+	RENEW_AMT = SUM(RENEW_NETLOANAMOUNT, -OLD_AMTPAIDLAST);
+RUN;
+
+PROC EXPORT 
+	DATA = ALL_APP9 
+	OUTFILE = "&MAIN_DIR\ALL_APP9_1.xlsx" 
+	DBMS = EXCEL 
+	REPLACE;
+RUN;
 
 PROC SQL;
-CREATE TABLE CHK1 AS 
-SELECT * FROM ALL_APP10 WHERE BOOKED = 1 AND renew_bracctno IS NOT NULL and appyrmonth in (201804); QUIT;
+	CREATE TABLE ABC AS 
+	SELECT ENTYRMONTH,
+		   COUNT(*), 
+		   SUM(RENEW_AMT) 
+	FROM ALL_APP9 
+	WHERE OLD_BRACCTNO IS NOT NULL AND RENEW_AMT > 0
+	GROUP BY 1; 
+QUIT; 
+
+PROC SQL; 
+	SELECT SUM(RENEW_AMT) 
+	FROM ALL_APP9 ; 
+QUIT;
+
+PROC SQL;
+	CREATE TABLE ALL_APP10 AS 
+	SELECT A.*, 
+		   B.OLD_BRACCTNO1, 
+		   B.RENEW_BRACCTNO,
+		   B.RENEW_NETLOANAMOUNT,
+		   B.OLD_AMTPAIDLAST,
+		   B.RENEW_AMT
+	FROM ALL_APPS_3 A 
+	LEFT JOIN ALL_APP9 B ON A.BRACCTNO = B.RENEW_BRACCTNO; 
+QUIT;
+
+PROC SQL;
+	CREATE TABLE CHK1 AS 
+	SELECT * 
+	FROM ALL_APP10 
+	WHERE BOOKED = 1 AND 
+		  RENEW_BRACCTNO IS NOT NULL AND 
+		  APPYRMONTH IN (201804); 
+QUIT;
