@@ -1,5 +1,5 @@
-%LET APPMONTH = 4;
-%LET BOOK_MONTH = 4;
+%LET APPMONTH = 5;
+%LET BOOK_MONTH = 5;
 
 TITLE;
 
@@ -96,8 +96,8 @@ RUN;
 ODS EXCEL CLOSE;
 
 *** BY VP AND SUPERVISOR ----------------------------------------- ***;
-%LET APPMONTH = 4;
-%LET BOOK_MONTH = 4;
+%LET APPMONTH = 5;
+%LET BOOK_MONTH = 5;
 
 PROC SORT 
 	DATA = ALL_APPS_3;
@@ -181,8 +181,8 @@ RUN;
 ODS EXCEL CLOSE;
 
 *** BY AMTBUCKET ------------------------------------------------- ***;
-%LET APPMONTH = 4;
-%LET BOOK_MONTH = 4;
+%LET APPMONTH = 5;
+%LET BOOK_MONTH = 5;
 
 ODS EXCEL;
 TITLE "Lending Tree";
