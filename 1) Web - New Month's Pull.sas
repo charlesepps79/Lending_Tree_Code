@@ -5,7 +5,7 @@
 	\\mktg-app01\E\cepps\Web_Report\Lending_Tree\Reports\05_2018;
 *** CHANGE ONLY WHEN ROSTER FILE CHANGES ------------------------- ***;
 %LET ROSTER_LOC = 
-"\\mktg-app01\E\cepps\Web_Report\BranchRosterFile\Roster 05-01-2018.xlsx";
+"\\mktg-app01\E\cepps\Web_Report\BranchRosterFile\Rosters 05-08-18.xlsx";
 
 *** CHANGE MONTH_NAME TO APP MONTH ------------------------------- ***;
 %LET NEW_MONTH_FILE = MAY_APPS;

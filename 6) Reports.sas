@@ -532,7 +532,18 @@ PROC SQL;
           /* % Renewal */
             ((SUM(t1.RENEW_FLAG_CURRENT)) / (SUM(t1.BOOKED_CURRENT))) FORMAT=PERCENT8. AS '% Renewal'n, 
           /* $ Renew */
-            (SUM(t1.RENEW_AMT_CURRENT)) FORMAT=DOLLAR12. AS '$ Renew'n
+            (SUM(t1.RENEW_AMT_CURRENT)) FORMAT=DOLLAR12. AS '$ Renew'n,
+		  /* Total App Cost */
+            (SUM(t1.TOTALAPPCOST_CURRENT)) FORMAT=DOLLAR12. AS 'Total App Cost'n, 
+          /* Cost Per Loan */
+            (AVG(t1.COSTPERLOAN)) FORMAT=DOLLAR12. AS 'Cost Per Loan'n, 
+          /* Total Loan Cost */
+            (SUM(t1.TOTALLOANCOST_CURRENT)) FORMAT=DOLLAR12. AS 'Total Loan Cost'n, 
+          /* Total Cost */
+            ((SUM(t1.TOTALAPPCOST_CURRENT)) + (SUM(t1.TOTALLOANCOST_CURRENT))) FORMAT=DOLLAR12. AS 'Total Cost'n, 
+          /* CPK */
+            (((SUM(t1.TOTALAPPCOST_CURRENT)) + (SUM(t1.TOTALLOANCOST_CURRENT))) / ((((SUM(t1.NEW_AMT_CURRENT)) + 
+            (SUM(t1.RENEW_AMT_CURRENT)))))*1000) FORMAT=DOLLAR12. AS CPK
       FROM WORK.REPORTS_TABLE t1
       WHERE t1.SOURCE = 'LendingTree'
       GROUP BY t1.VP,
